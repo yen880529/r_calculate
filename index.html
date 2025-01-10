@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R角座標計算</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .button-row {
+            margin: 10px 0;
+            display: flex;
+            gap: 15px; /* 設定按鈕之間的間距 */
+            justify-content: center; /* 使按鈕居中對齊 */
+        }
+
+        button {
+            padding: 12px;
+            width: 100px;
+            background-color: #007bff;
+            border: 1px solid #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button.active {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .form-group label {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .form-group input {
+            padding: 10px;
+            width: 120px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            margin-right: 5px;
+        }
+
+        .form-group input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .section-title {
+            font-size: 18px;
+            color: #333;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>R角座標計算</h1>
+
+    <!-- Machine Selection -->
+    <p class="section-title">機台選擇</p>
+    <div class="button-row">
+        <button onclick="selectMachine('T', this)">T</button>
+        <button onclick="selectMachine('L', this)">L</button>
+    </div>
+
+    <!-- Direction Buttons -->
+    <p class="section-title">刀尖方向</p>
+    <div class="button-row" id="direction-buttons">
+        <!-- Buttons will be dynamically updated here -->
+    </div>
+
+    <!-- Input Fields -->
+    <p class="section-title">輸入數字：</p>
+    
+    <div class="form-group">
+        <label>座標1</label>
+        <input type="number" id="x1" placeholder="X">
+        <input type="number" id="z1" placeholder="Z">
+    </div>
+
+    <div class="form-group">
+        <label>座標2</label>
+        <input type="number" id="x2" placeholder="X">
+        <input type="number" id="z2" placeholder="Z">
+    </div>
+
+    <div class="form-group">
+        <label>座標3</label>
+        <input type="number" id="x3" placeholder="X">
+        <input type="number" id="z3" placeholder="Z">
+    </div>
+
+    <div class="form-group">
+        <input type="number" id="r" placeholder="R角">
+        <input type="number" id="radius" placeholder="刀尖R">
+        <input type="number" id="reserved" placeholder="預留量">
+    </div>
+
+    <!-- Calculate Button -->
+    <div class="button-row">
+        <button onclick="calculate()">計算</button>
+    </div>
+
+    <!-- Result Display -->
+    <div id="AB">結果：--</div>
+
+    <script>
+        let selectedMachine = null;
+        let selectedDirection = null;
+
+        function selectMachine(machine, button) {
+            selectedMachine = machine;
+            highlightButton(button, 'machine');
+            updateDirectionButtons();
+            updateResult();
+        }
+
+        function selectDirection(direction, button) {
+            selectedDirection = direction;
+            highlightButton(button, 'direction');
+            updateResult();
+        }
+
+        function highlightButton(button, group) {
+            const buttonGroup = document.querySelectorAll(`.button-row button`);
+            buttonGroup.forEach(btn => {
+                if (btn.parentNode === button.parentNode) {
+                    btn.classList.remove('active');
+                }
+            });
+            button.classList.add('active');
+        }
+
+        function updateDirectionButtons() {
+            const directionButtonsContainer = document.getElementById('direction-buttons');
+            directionButtonsContainer.innerHTML = ''; // Clear existing buttons
+
+            if (selectedMachine === 'T') {
+                const leftButton = document.createElement('button');
+                leftButton.textContent = '左';
+                leftButton.onclick = () => selectDirection('left', leftButton);
+                directionButtonsContainer.appendChild(leftButton);
+
+                const rightButton = document.createElement('button');
+                rightButton.textContent = '右';
+                rightButton.onclick = () => selectDirection('right', rightButton);
+                directionButtonsContainer.appendChild(rightButton);
+            } else if (selectedMachine === 'L') {
+                const upButton = document.createElement('button');
+                upButton.textContent = '上';
+                upButton.onclick = () => selectDirection('up', upButton);
+                directionButtonsContainer.appendChild(upButton);
+
+                const downButton = document.createElement('button');
+                downButton.textContent = '下';
+                downButton.onclick = () => selectDirection('down', downButton);
+                directionButtonsContainer.appendChild(downButton);
+            }
+        }
+
+        function calculate() {
+            // 先取得輸入框中的數值
+            const x1 = parseFloat(document.getElementById('x1').value);
+            const z1 = parseFloat(document.getElementById('z1').value);
+            const x2 = parseFloat(document.getElementById('x2').value);
+            const z2 = parseFloat(document.getElementById('z2').value);
+            const x3 = parseFloat(document.getElementById('x3').value);
+            const z3 = parseFloat(document.getElementById('z3').value);
+
+            // 獲取 r, reserved, radius 的值
+            const r = parseFloat(document.getElementById('r').value);
+            const reserved = parseFloat(document.getElementById('reserved').value);
+            const radius = parseFloat(document.getElementById('radius').value);
+
+            if (selectedMachine && selectedDirection) {
+                let result;
+
+                if (selectedMachine === 'T' && selectedDirection === 'left') {
+                    // 計算 AB 和 BC 的距離
+                    const AB = Math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2);
+                    const BC = Math.sqrt((x3 - x2) ** 2 + (z3 - z2) ** 2);
+
+                    // 計算 AB 和 BC 的角度 (弧度轉換成度數)
+                    const AB_rad = Math.asin((z2 - z1) / AB);
+                    const AB_angles = AB_rad * (180 / Math.PI); // 轉換為度數
+
+                    const BC_rad = Math.acos((z3 - z2) / BC);
+                    const BC_angles = BC_rad * (180 / Math.PI); // 轉換為度數
+
+                    // 計算 R 角度
+                    const R_angles = Math.abs((90 - AB_angles - BC_angles) / 2);
+                    const RR = r * Math.tan(R_angles * Math.PI / 180);
+
+                    // 計算 R1 和 R2 的座標
+                    const R1_X = RR * Math.cos(AB_angles * Math.PI / 180);
+                    const R1_Z = RR * Math.sin(AB_angles * Math.PI / 180);
+
+                    const R2_X = RR * Math.sin(BC_angles * Math.PI / 180);
+                    const R2_Z = RR * Math.cos(BC_angles * Math.PI / 180);
+
+                    // 計算 P1 和 P2 的座標
+                    const P1_X = (reserved + radius) * Math.sin(AB_angles * Math.PI / 180);
+                    const P1_Z = (reserved + radius) * Math.cos(AB_angles * Math.PI / 180);
+
+                    const P2_X = (reserved + radius) * Math.cos(BC_angles * Math.PI / 180);
+                    const P2_Z = (reserved + radius) * Math.sin(BC_angles * Math.PI / 180);
+
+                    // 計算 R 角的起點座標
+                    const R_first_X = x2 - R1_X - P1_X - radius;
+                    const R_first_Z = z2 + R1_Z + P1_Z - radius;
+                    
+                    //
+                    const R_finish_X = x2 + R2_X - P2_X - radius;
+                    const R_finish_Z = z2 + R2_Z + P2_Z - radius;
+
+                    // 顯示計算結果
+                    result = `
+                        R角起點: ${R_first_X.toFixed(2)},${R_first_Z.toFixed(2)}<br>
+                        R角終點: ${R_finish_X.toFixed(2)},${R_finish_Z.toFixed(2)}<br>
+                    `;
+
+                } else if (selectedMachine === 'T' && selectedDirection === 'right') {
+                    result = "T + 右 計算結果";
+                } else if (selectedMachine === 'L' && selectedDirection === 'up') {
+                    result = "L + 上 計算結果";
+                } else if (selectedMachine === 'L' && selectedDirection === 'down') {
+                    result = "L + 下 計算結果";
+                } else {
+                    result = "未知的條件";
+                }
+
+                // 顯示結果
+                document.getElementById('AB').innerHTML = `結果：${result}`;
+            } else {
+                document.getElementById('AB').textContent = "請選擇機台和方向";
+            }
+        }
+
+    </script>
+</body>
+</html>
