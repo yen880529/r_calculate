@@ -214,37 +214,36 @@
 
             if (selectedMachine && selectedDirection) {
                 let result;
+                // 計算 AB 和 BC 的距離
+                const AB = Math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2);
+                const BC = Math.sqrt((x3 - x2) ** 2 + (z3 - z2) ** 2);
+
+                // 計算 AB 和 BC 的角度 (弧度轉換成度數)
+                const AB_rad = Math.asin((z2 - z1) / AB);
+                const AB_angles = AB_rad * (180 / Math.PI); // 轉換為度數
+
+                const BC_rad = Math.acos((z3 - z2) / BC);
+                const BC_angles = BC_rad * (180 / Math.PI); // 轉換為度數
+
+                // 計算 R 角度
+                const R_angles = Math.abs((90 - AB_angles - BC_angles) / 2);
+                const RR = r * Math.tan(R_angles * Math.PI / 180);
+
+                // 計算 R1 和 R2 的座標
+                const R1_X = RR * Math.cos(AB_angles * Math.PI / 180);
+                const R1_Z = RR * Math.sin(AB_angles * Math.PI / 180);
+
+                const R2_X = RR * Math.sin(BC_angles * Math.PI / 180);
+                const R2_Z = RR * Math.cos(BC_angles * Math.PI / 180);
+
+                // 計算 P1 和 P2 的座標
+                const P1_X = (reserved + radius) * Math.sin(AB_angles * Math.PI / 180);
+                const P1_Z = (reserved + radius) * Math.cos(AB_angles * Math.PI / 180);
+
+                const P2_X = (reserved + radius) * Math.cos(BC_angles * Math.PI / 180);
+                const P2_Z = (reserved + radius) * Math.sin(BC_angles * Math.PI / 180);
 
                 if (selectedMachine === 'T' && selectedDirection === 'left') {
-                    // 計算 AB 和 BC 的距離
-                    const AB = Math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2);
-                    const BC = Math.sqrt((x3 - x2) ** 2 + (z3 - z2) ** 2);
-
-                    // 計算 AB 和 BC 的角度 (弧度轉換成度數)
-                    const AB_rad = Math.asin((z2 - z1) / AB);
-                    const AB_angles = AB_rad * (180 / Math.PI); // 轉換為度數
-
-                    const BC_rad = Math.acos((z3 - z2) / BC);
-                    const BC_angles = BC_rad * (180 / Math.PI); // 轉換為度數
-
-                    // 計算 R 角度
-                    const R_angles = Math.abs((90 - AB_angles - BC_angles) / 2);
-                    const RR = r * Math.tan(R_angles * Math.PI / 180);
-
-                    // 計算 R1 和 R2 的座標
-                    const R1_X = RR * Math.cos(AB_angles * Math.PI / 180);
-                    const R1_Z = RR * Math.sin(AB_angles * Math.PI / 180);
-
-                    const R2_X = RR * Math.sin(BC_angles * Math.PI / 180);
-                    const R2_Z = RR * Math.cos(BC_angles * Math.PI / 180);
-
-                    // 計算 P1 和 P2 的座標
-                    const P1_X = (reserved + radius) * Math.sin(AB_angles * Math.PI / 180);
-                    const P1_Z = (reserved + radius) * Math.cos(AB_angles * Math.PI / 180);
-
-                    const P2_X = (reserved + radius) * Math.cos(BC_angles * Math.PI / 180);
-                    const P2_Z = (reserved + radius) * Math.sin(BC_angles * Math.PI / 180);
-
                     // 計算 R 角的起點座標
                     const R_first_X = x2 - R1_X - P1_X - radius;
                     const R_first_Z = z2 - R1_Z + P1_Z - radius;
@@ -260,46 +259,44 @@
                     `;
 
                 } else if (selectedMachine === 'T' && selectedDirection === 'right') {
-                    result = "T + 右 計算結果";
-                } else if (selectedMachine === 'L' && selectedDirection === 'up') {
-                                        // 計算 AB 和 BC 的距離
-                                        const AB = Math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2);
-                    const BC = Math.sqrt((x3 - x2) ** 2 + (z3 - z2) ** 2);
-
-                    // 計算 AB 和 BC 的角度 (弧度轉換成度數)
-                    const AB_rad = Math.asin((z2 - z1) / AB);
-                    const AB_angles = AB_rad * (180 / Math.PI); // 轉換為度數
-
-                    const BC_rad = Math.acos((z3 - z2) / BC);
-                    const BC_angles = BC_rad * (180 / Math.PI); // 轉換為度數
-
-                    // 計算 R 角度
-                    const R_angles = Math.abs((90 - AB_angles - BC_angles) / 2);
-                    const RR = r * Math.tan(R_angles * Math.PI / 180);
-
-                    // 計算 R1 和 R2 的座標
-                    const R1_X = RR * Math.cos(AB_angles * Math.PI / 180);
-                    const R1_Z = RR * Math.sin(AB_angles * Math.PI / 180);
-
-                    const R2_X = RR * Math.sin(BC_angles * Math.PI / 180);
-                    const R2_Z = RR * Math.cos(BC_angles * Math.PI / 180);
-
-                    // 計算 P1 和 P2 的座標
-                    const P1_X = (reserved + radius) * Math.sin(AB_angles * Math.PI / 180);
-                    const P1_Z = (reserved + radius) * Math.cos(AB_angles * Math.PI / 180);
-
-                    const P2_X = (reserved + radius) * Math.cos(BC_angles * Math.PI / 180);
-                    const P2_Z = (reserved + radius) * Math.sin(BC_angles * Math.PI / 180);
-
                     // 計算 R 角的起點座標
-                    const R_first_X = x2 - R1_X - P1_X - radius;
+                    const R_first_X = x2 + R1_X - P1_X - radius;
+                    const R_first_Z = z2 - R1_Z - P1_Z + radius;
+                    
+                    //
+                    const R_finish_X = x2 - R2_X - P2_X - radius;
+                    const R_finish_Z = z2 + R2_Z - P2_Z + radius;
+
+                    result = `
+                        R角起點: ${R_first_X.toFixed(2)},${R_first_Z.toFixed(2)}<br>
+                        R角終點: ${R_finish_X.toFixed(2)},${R_finish_Z.toFixed(2)}<br>
+                    `;
+                } else if (selectedMachine === 'L' && selectedDirection === 'up') {
+                    // 計算 R 角的起點座標
+                    const R_first_X = x2 + R1_X + P1_X + radius;
                     const R_first_Z = z2 - R1_Z + P1_Z - radius;
                     
                     //
-                    const R_finish_X = x2 + R2_X - P2_X - radius;
+                    const R_finish_X = x2 - R2_X + P2_X + radius;
                     const R_finish_Z = z2 + R2_Z + P2_Z - radius;
+
+                    result = `
+                        R角起點: ${R_first_X.toFixed(2)},${R_first_Z.toFixed(2)}<br>
+                        R角終點: ${R_finish_X.toFixed(2)},${R_finish_Z.toFixed(2)}<br>
+                    `;
                 } else if (selectedMachine === 'L' && selectedDirection === 'down') {
-                    result = "L + 下 計算結果";
+                    // 計算 R 角的起點座標
+                    const R_first_X = x2 - R1_X - P1_X + radius;
+                    const R_first_Z = z2 + R1_Z - P1_Z - radius;
+                    
+                    //
+                    const R_finish_X = x2 + R2_X - P2_X + radius;
+                    const R_finish_Z = z2 - R2_Z - P2_Z - radius;
+
+                    result = `
+                        R角起點: ${R_first_X.toFixed(2)},${R_first_Z.toFixed(2)}<br>
+                        R角終點: ${R_finish_X.toFixed(2)},${R_finish_Z.toFixed(2)}<br>
+                    `;
                 } else {
                     result = "未知的條件";
                 }
