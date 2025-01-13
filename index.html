@@ -91,11 +91,15 @@
         }
 
         canvas {
-            width: 200px; /* 或其他大小 */
-            height: 200px;
-            margin-top: 30px;
-            background: white;
-            border: 1px solid #ddd;
+    width: 100%;
+    height: 100%;
+        }
+
+        @media (max-width: 600px) {
+            canvas {
+                width: 100%;
+                height: 150%; /* 針對小屏幕增加高度 */
+            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -334,7 +338,7 @@
                         R_finish_X = (x2 - R2_X + P2_X + radius) * 2;
                         R_finish_Z = z2 + R2_Z + P2_Z - radius;
                         const center_XZ = Math.sqrt(r ** 2 + RR ** 2);
-                        center_X = x2 - center_XZ * Math.sin((AB_angles + R_angles) * Math.PI / 180)+reserved;
+                        center_X = x2 - center_XZ * Math.sin((AB_angles + R_angles) * Math.PI / 180);
                         center_Z = z2 - center_XZ * Math.cos((AB_angles + R_angles) * Math.PI / 180);
                     } else if (selectedMachine === 'L' && selectedDirection === 'up') {
                         R_first_X = (x2 + R1_X + P1_X + radius) * 2;
