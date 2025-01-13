@@ -132,7 +132,11 @@
 
     <div class="form-group">
         <input type="number" id="r" placeholder="R角">
+    </div>
+    <div class="form-group">
         <input type="number" id="radius" placeholder="刀尖R">
+    </div>
+    <div class="form-group">
         <input type="number" id="reserved" placeholder="預留量">
     </div>
 
@@ -200,11 +204,11 @@
 
         function calculate() {
             // 先取得輸入框中的數值
-            const x1 = parseFloat(document.getElementById('x1').value);
+            const x1 = parseFloat(document.getElementById('x1').value)/2;
             const z1 = parseFloat(document.getElementById('z1').value);
-            const x2 = parseFloat(document.getElementById('x2').value);
+            const x2 = parseFloat(document.getElementById('x2').value)/2;
             const z2 = parseFloat(document.getElementById('z2').value);
-            const x3 = parseFloat(document.getElementById('x3').value);
+            const x3 = parseFloat(document.getElementById('x3').value)/2;
             const z3 = parseFloat(document.getElementById('z3').value);
 
             // 獲取 r, reserved, radius 的值
@@ -245,11 +249,11 @@
 
                 if (selectedMachine === 'T' && selectedDirection === 'left') {
                     // 計算 R 角的起點座標
-                    const R_first_X = x2 - R1_X - P1_X - radius;
+                    const R_first_X = (x2 - R1_X - P1_X - radius)*2;
                     const R_first_Z = z2 - R1_Z + P1_Z - radius;
                     
                     //
-                    const R_finish_X = x2 + R2_X - P2_X - radius;
+                    const R_finish_X = (x2 + R2_X - P2_X - radius)*2;
                     const R_finish_Z = z2 + R2_Z + P2_Z - radius;
 
                     // 顯示計算結果
@@ -260,12 +264,12 @@
 
                 } else if (selectedMachine === 'T' && selectedDirection === 'right') {
                     // 計算 R 角的起點座標
-                    const R_first_X = x2 + R1_X - P1_X - radius;
-                    const R_first_Z = z2 - R1_Z - P1_Z + radius;
+                    const R_first_X = (x2 + R1_X + P1_X + radius)*2;
+                    const R_first_Z = z2 - R1_Z + P1_Z - radius;
                     
                     //
-                    const R_finish_X = x2 - R2_X - P2_X - radius;
-                    const R_finish_Z = z2 + R2_Z - P2_Z + radius;
+                    const R_finish_X = (x2 - R2_X + P2_X + radius)*2;
+                    const R_finish_Z = z2 + R2_Z + P2_Z - radius;
 
                     result = `
                         R角起點: ${R_first_X.toFixed(2)},${R_first_Z.toFixed(2)}<br>
@@ -302,7 +306,7 @@
                 }
 
                 // 顯示結果
-                document.getElementById('AB').innerHTML = `結果：${result}`;
+                document.getElementById('AB').innerHTML = `結果：<br>${result}`;
             } else {
                 document.getElementById('AB').textContent = "請選擇機台和方向";
             }
