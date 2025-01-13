@@ -15,7 +15,6 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
         }
 
         h1 {
@@ -90,7 +89,16 @@
             color: #333;
             margin-top: 20px;
         }
+
+        canvas {
+            width: 200px; /* 或其他大小 */
+            height: 200px;
+            margin-top: 30px;
+            background: white;
+            border: 1px solid #ddd;
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -146,7 +154,14 @@
     </div>
 
     <!-- Result Display -->
-    <div id="AB">結果：--</div>
+    <div id="test">結果：--</div>
+    <div id="draw">結果：--</div>
+
+    <!-- Chart Display -->
+    <div >
+        <canvas id="coordinateChart" style="width: 300%; height: 300%;"></canvas>
+    </div>
+    
 
     <script>
         let selectedMachine = null;
@@ -202,116 +217,183 @@
             }
         }
 
+        let chart = null;
+
+        function initializeChart() {
+            const ctx = document.getElementById('coordinateChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                    {
+                        label: '圖面',
+                        data: [], // 用於儲存輸入的座標點
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)', // 點的顏色
+                        borderColor: 'rgba(54, 162, 235, 1)', // 線的顏色
+                        borderWidth: 2, // 線的粗細
+                        fill: false, // 不填充點之間的區域
+                        lineTension: 0, // 使線條不會有彎曲
+                        showLine: true, // 顯示線
+                    },
+                    {
+                        label: '刀具路徑',
+                        data: [], // 用於儲存計算結果的座標點
+                        backgroundColor: 'rgba(255, 99, 132, 0.8)', // 點的顏色
+                        borderColor: 'rgba(255, 99, 132, 1)', // 線的顏色
+                        borderWidth: 2, // 線的粗細
+                        fill: false, // 不填充點之間的區域
+                        lineTension: 0, // 使線條不會有彎曲
+                        showLine: true, // 顯示線
+                    },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'X 座標',
+                            },
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Z 座標',
+                            },
+                        },
+                    },
+                },
+            });
+        }
+
+        function updateChart(inputPoints, arcPoints) {
+            chart.data.datasets[0].data = inputPoints; // 更新輸入座標
+            chart.data.datasets[1].data = arcPoints; // 更新圓弧計算結果
+            chart.update();
+        }
+
         function calculate() {
-            // 先取得輸入框中的數值
-            const x1 = parseFloat(document.getElementById('x1').value)/2;
+            const x1 = parseFloat(document.getElementById('x1').value) / 2;
             const z1 = parseFloat(document.getElementById('z1').value);
-            const x2 = parseFloat(document.getElementById('x2').value)/2;
+            const x2 = parseFloat(document.getElementById('x2').value) / 2;
             const z2 = parseFloat(document.getElementById('z2').value);
-            const x3 = parseFloat(document.getElementById('x3').value)/2;
+            const x3 = parseFloat(document.getElementById('x3').value) / 2;
             const z3 = parseFloat(document.getElementById('z3').value);
 
-            // 獲取 r, reserved, radius 的值
             const r = parseFloat(document.getElementById('r').value);
             const reserved = parseFloat(document.getElementById('reserved').value);
             const radius = parseFloat(document.getElementById('radius').value);
 
-            if (selectedMachine && selectedDirection) {
-                let result;
-                // 計算 AB 和 BC 的距離
-                const AB = Math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2);
-                const BC = Math.sqrt((x3 - x2) ** 2 + (z3 - z2) ** 2);
+            if (!isNaN(x1) && !isNaN(z1) && !isNaN(x2) && !isNaN(z2) && !isNaN(x3) && !isNaN(z3)) {
+                const inputPoints = [
+                    { x: x1, y: z1 },
+                    { x: x2, y: z2 },
+                    { x: x3, y: z3 },
+                ];
 
-                // 計算 AB 和 BC 的角度 (弧度轉換成度數)
-                const AB_rad = Math.asin((z2 - z1) / AB);
-                const AB_angles = AB_rad * (180 / Math.PI); // 轉換為度數
+                if (selectedMachine && selectedDirection) {
+                    const AB = Math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2);
+                    const BC = Math.sqrt((x3 - x2) ** 2 + (z3 - z2) ** 2);
 
-                const BC_rad = Math.acos((z3 - z2) / BC);
-                const BC_angles = BC_rad * (180 / Math.PI); // 轉換為度數
+                    const AB_rad = Math.asin((z2 - z1) / AB);
+                    const AB_angles = AB_rad * (180 / Math.PI);
 
-                // 計算 R 角度
-                const R_angles = Math.abs((90 - AB_angles - BC_angles) / 2);
-                const RR = r * Math.tan(R_angles * Math.PI / 180);
+                    const BC_rad = Math.acos((z3 - z2) / BC);
+                    const BC_angles = BC_rad * (180 / Math.PI);
 
-                // 計算 R1 和 R2 的座標
-                const R1_X = RR * Math.cos(AB_angles * Math.PI / 180);
-                const R1_Z = RR * Math.sin(AB_angles * Math.PI / 180);
+                    const R_angles = Math.abs((90 - AB_angles - BC_angles) / 2);
+                    const RR = r * Math.tan(R_angles * Math.PI / 180);
 
-                const R2_X = RR * Math.sin(BC_angles * Math.PI / 180);
-                const R2_Z = RR * Math.cos(BC_angles * Math.PI / 180);
+                    const R1_X = RR * Math.cos(AB_angles * Math.PI / 180);
+                    const R1_Z = RR * Math.sin(AB_angles * Math.PI / 180);
 
-                // 計算 P1 和 P2 的座標
-                const P1_X = (reserved + radius) * Math.sin(AB_angles * Math.PI / 180);
-                const P1_Z = (reserved + radius) * Math.cos(AB_angles * Math.PI / 180);
+                    const R2_X = RR * Math.sin(BC_angles * Math.PI / 180);
+                    const R2_Z = RR * Math.cos(BC_angles * Math.PI / 180);
 
-                const P2_X = (reserved + radius) * Math.cos(BC_angles * Math.PI / 180);
-                const P2_Z = (reserved + radius) * Math.sin(BC_angles * Math.PI / 180);
+                    const P1_X = (reserved + radius) * Math.sin(AB_angles * Math.PI / 180);
+                    const P1_Z = (reserved + radius) * Math.cos(AB_angles * Math.PI / 180);
 
-                if (selectedMachine === 'T' && selectedDirection === 'left') {
-                    // 計算 R 角的起點座標
-                    const R_first_X = (x2 - R1_X - P1_X - radius)*2;
-                    const R_first_Z = z2 - R1_Z + P1_Z - radius;
-                    
-                    //
-                    const R_finish_X = (x2 + R2_X - P2_X - radius)*2;
-                    const R_finish_Z = z2 + R2_Z + P2_Z - radius;
+                    const P2_X = (reserved + radius) * Math.cos(BC_angles * Math.PI / 180);
+                    const P2_Z = (reserved + radius) * Math.sin(BC_angles * Math.PI / 180);
 
-                    // 顯示計算結果
-                    result = `
-                        R角起點: ${R_first_X.toFixed(2)},${R_first_Z.toFixed(2)}<br>
-                        R角終點: ${R_finish_X.toFixed(2)},${R_finish_Z.toFixed(2)}<br>
-                    `;
+                    let R_first_X, R_first_Z, R_finish_X, R_finish_Z;
+                    let center_X = 0, center_Z = 0; // Default values
 
-                } else if (selectedMachine === 'T' && selectedDirection === 'right') {
-                    // 計算 R 角的起點座標
-                    const R_first_X = (x2 + R1_X + P1_X + radius)*2;
-                    const R_first_Z = z2 - R1_Z + P1_Z - radius;
-                    
-                    //
-                    const R_finish_X = (x2 - R2_X + P2_X + radius)*2;
-                    const R_finish_Z = z2 + R2_Z + P2_Z - radius;
+                    if (selectedMachine === 'T' && selectedDirection === 'left') {
+                        R_first_X = (x2 - R1_X - P1_X - radius) * 2;
+                        R_first_Z = z2 - R1_Z + P1_Z - radius;
+                        R_finish_X = (x2 + R2_X - P2_X - radius) * 2;
+                        R_finish_Z = z2 + R2_Z + P2_Z - radius;
+                        const center_XZ = Math.sqrt(r ** 2 + RR ** 2);
+                        center_X = x2 - center_XZ * Math.sin((AB_angles + R_angles) * Math.PI / 180);
+                        center_Z = z2 - center_XZ * Math.cos((AB_angles + R_angles) * Math.PI / 180);
+                    } else if (selectedMachine === 'T' && selectedDirection === 'right') {
+                        R_first_X = (x2 + R1_X + P1_X + radius) * 2;
+                        R_first_Z = z2 - R1_Z + P1_Z - radius;
+                        R_finish_X = (x2 - R2_X + P2_X + radius) * 2;
+                        R_finish_Z = z2 + R2_Z + P2_Z - radius;
+                        const center_XZ = Math.sqrt(r ** 2 + RR ** 2);
+                        center_X = x2 - center_XZ * Math.sin((AB_angles + R_angles) * Math.PI / 180)+reserved;
+                        center_Z = z2 - center_XZ * Math.cos((AB_angles + R_angles) * Math.PI / 180);
+                    } else if (selectedMachine === 'L' && selectedDirection === 'up') {
+                        R_first_X = (x2 + R1_X + P1_X + radius) * 2;
+                        R_first_Z = z2 - R1_Z + P1_Z - radius;
+                        R_finish_X = (x2 - R2_X + P2_X + radius) * 2;
+                        R_finish_Z = z2 + R2_Z + P2_Z - radius;
+                        const center_XZ = Math.sqrt(r ** 2 + RR ** 2);
+                        center_X = x2 - center_XZ * Math.sin((AB_angles + R_angles) * Math.PI / 180);
+                        center_Z = z2 - center_XZ * Math.cos((AB_angles + R_angles) * Math.PI / 180);
+                    } else if (selectedMachine === 'L' && selectedDirection === 'down') {
+                        R_first_X = (x2 + R1_X - P1_X - radius) * 2;
+                        R_first_Z = z2 - R1_Z + P1_Z - radius;
+                        R_finish_X = (x2 - R2_X - P2_X - radius) * 2;
+                        R_finish_Z = z2 + R2_Z - P2_Z - radius;
+                        const center_XZ = Math.sqrt(r ** 2 + RR ** 2);
+                        center_X = x2 - center_XZ * Math.sin((AB_angles + R_angles) * Math.PI / 180);
+                        center_Z = z2 - center_XZ * Math.cos((AB_angles + R_angles) * Math.PI / 180);
+                    } else {
+                        document.getElementById('test').textContent = '未知的條件';
+                        return;
+                    }
 
-                    result = `
-                        R角起點: ${R_first_X.toFixed(2)},${R_first_Z.toFixed(2)}<br>
-                        R角終點: ${R_finish_X.toFixed(2)},${R_finish_Z.toFixed(2)}<br>
-                    `;
-                } else if (selectedMachine === 'L' && selectedDirection === 'up') {
-                    // 計算 R 角的起點座標
-                    const R_first_X = x2 + R1_X + P1_X + radius;
-                    const R_first_Z = z2 - R1_Z + P1_Z - radius;
-                    
-                    //
-                    const R_finish_X = x2 - R2_X + P2_X + radius;
-                    const R_finish_Z = z2 + R2_Z + P2_Z - radius;
+                    // 確保起點和終點圓弧正確
+                    const startAngle = Math.atan2(R_first_Z - center_Z, (R_first_X / 2) - center_X);
+                    const endAngle = Math.atan2(R_finish_Z - center_Z, (R_finish_X / 2) - center_X);
 
-                    result = `
-                        R角起點: ${R_first_X.toFixed(2)},${R_first_Z.toFixed(2)}<br>
-                        R角終點: ${R_finish_X.toFixed(2)},${R_finish_Z.toFixed(2)}<br>
-                    `;
-                } else if (selectedMachine === 'L' && selectedDirection === 'down') {
-                    // 計算 R 角的起點座標
-                    const R_first_X = x2 - R1_X - P1_X + radius;
-                    const R_first_Z = z2 + R1_Z - P1_Z - radius;
-                    
-                    //
-                    const R_finish_X = x2 + R2_X - P2_X + radius;
-                    const R_finish_Z = z2 - R2_Z - P2_Z - radius;
+                    // 使用 r 來繪製圓弧
+                    const arcPoints = [];
+                    const numPoints = 100; // 點的數量
 
-                    result = `
-                        R角起點: ${R_first_X.toFixed(2)},${R_first_Z.toFixed(2)}<br>
-                        R角終點: ${R_finish_X.toFixed(2)},${R_finish_Z.toFixed(2)}<br>
+                    const angleStep = (endAngle - startAngle) / numPoints;
+
+                    for (let i = 0; i <= numPoints; i++) {
+                        const angle = startAngle + i * angleStep;
+                        const arcX = center_X + (r + reserved) * Math.cos(angle);
+                        const arcZ = center_Z + (r + reserved) * Math.sin(angle);
+                        arcPoints.push({ x: arcX, y: arcZ });
+                    }
+
+                    // Update chart
+                    updateChart(inputPoints, arcPoints);
+
+                    // Display the result
+                    document.getElementById('test').innerHTML = `
+                        結果：<br>
+                        R角起點: ${R_first_X.toFixed(2)}, ${R_first_Z.toFixed(2)}<br>
+                        R角終點: ${R_finish_X.toFixed(2)}, ${R_finish_Z.toFixed(2)}<br>
+                        RR: ${RR.toFixed(2)}<br>
+                        R角中心: ${center_X.toFixed(2)}, ${center_Z.toFixed(2)}
                     `;
                 } else {
-                    result = "未知的條件";
+                    document.getElementById('test').textContent = '請選擇機台和方向';
                 }
-
-                // 顯示結果
-                document.getElementById('AB').innerHTML = `結果：<br>${result}`;
             } else {
-                document.getElementById('AB').textContent = "請選擇機台和方向";
+                document.getElementById('draw').textContent = '請輸入完整的座標';
             }
         }
 
+        initializeChart();
     </script>
 </body>
 </html>
