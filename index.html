@@ -89,6 +89,40 @@
             color: #333;
             margin-top: 20px;
         }
+        .form-group select {
+        padding: 10px;
+        width: 120px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+        background-color: white;
+        color: #333;
+        appearance: none; /* 去掉原生的下拉箭頭 */
+        -webkit-appearance: none; /* 針對Safari */
+        -moz-appearance: none; /* 針對Firefox */
+        }
+
+        .form-group select:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        /* 在select旁邊加入一個自訂的下拉箭頭樣式 */
+        .form-group select::after {
+            content: '\25BC'; /* 下拉箭頭符號 */
+            font-size: 18px;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none; /* 讓箭頭不影響點擊 */
+        }
+
+        /* 可選：為select增加一些過渡效果 */
+        .form-group select {
+            transition: border-color 0.3s ease;
+        }
+
 
         canvas {
     width: 100%;
@@ -122,34 +156,34 @@
     </div>
 
     <!-- Input Fields -->
-    <p class="section-title">輸入數字：</p>
+    <p class="section-title">輸入座標：</p>
     
     <div class="form-group">
-        <label>座標1</label>
-        <input type="number" id="x1" placeholder="X">
-        <input type="number" id="z1" placeholder="Z">
+        <input type="number" id="x1" placeholder="起點X">
+        <input type="number" id="z1" placeholder="起點Z">
     </div>
 
     <div class="form-group">
-        <label>座標2</label>
-        <input type="number" id="x2" placeholder="X">
-        <input type="number" id="z2" placeholder="Z">
+        <input type="number" id="x2" placeholder="R角X">
+        <input type="number" id="z2" placeholder="R角Z">
     </div>
 
     <div class="form-group">
-        <label>座標3</label>
-        <input type="number" id="x3" placeholder="X">
-        <input type="number" id="z3" placeholder="Z">
+        <input type="number" id="x3" placeholder="終點X">
+        <input type="number" id="z3" placeholder="終點Z">
     </div>
-
+    <p class="section-title">輸入R角：</p>
     <div class="form-group">
         <input type="number" id="r" placeholder="R角">
-    </div>
-    <div class="form-group">
         <input type="number" id="radius" placeholder="刀尖R">
     </div>
     <div class="form-group">
         <input type="number" id="reserved" placeholder="預留量">
+        <select name="direction" id="direction">
+            <option value="G02">G02</option>
+            <option value="G03">G03</option>
+        </select>
+        
     </div>
 
     <!-- Calculate Button -->
@@ -162,7 +196,7 @@
     <div id="draw">圖表：</div>
 
     <!-- Chart Display -->
-    <div style="width: 100%; height: 400px;">
+    <div style="width: 400px; height: 400px;">
         <canvas id="coordinateChart" style="width: 100%; height: 100%;"></canvas>
     </div>
     
@@ -249,6 +283,19 @@
                         lineTension: 0, // 使線條不會有彎曲
                         showLine: true, // 顯示線
                     },
+
+                    {
+                        label: '加工輪廓',
+                        data: [], // 用於儲存計算結果的座標點
+                        backgroundColor: 'rgba(75, 192, 192, 0.8)', // 點的顏色 (改為綠色)
+                        borderColor: 'rgba(75, 192, 192, 1)', // 線的顏色 (改為綠色)
+                        borderWidth: 2, // 線的粗細
+                        fill: false, // 不填充點之間的區域
+                        lineTension: 0, // 使線條不會有彎曲
+                        showLine: true, // 顯示線
+                    },
+
+
                     ],
                 },
                 options: {
@@ -271,9 +318,10 @@
             });
         }
 
-        function updateChart(inputPoints, arcPoints) {
+        function updateChart(inputPoints, arcPoints , actualPoints) {
             chart.data.datasets[0].data = inputPoints; // 更新輸入座標
             chart.data.datasets[1].data = arcPoints; // 更新圓弧計算結果
+            chart.data.datasets[2].data = actualPoints; // 更新圓弧計算結果
             chart.update();
         }
 
@@ -303,6 +351,7 @@
                     const AB_rad = Math.asin((z2 - z1) / AB);
                     const AB_angles = AB_rad * (180 / Math.PI);
 
+
                     const BC_rad = Math.acos((z3 - z2) / BC);
                     const BC_angles = BC_rad * (180 / Math.PI);
 
@@ -325,37 +374,77 @@
                     let center_X = 0, center_Z = 0; // Default values
 
                     if (selectedMachine === 'T' && selectedDirection === 'left') {
+                        //刀具路徑
                         R_first_X = (x2 - R1_X - P1_X - radius) * 2;
                         R_first_Z = z2 - R1_Z + P1_Z - radius;
                         R_finish_X = (x2 + R2_X - P2_X - radius) * 2;
                         R_finish_Z = z2 + R2_Z + P2_Z - radius;
-                        const center_XZ = Math.sqrt(r ** 2 + RR ** 2);
-                        center_X = x2 - center_XZ * Math.sin((AB_angles + R_angles) * Math.PI / 180);
-                        center_Z = z2 - center_XZ * Math.cos((AB_angles + R_angles) * Math.PI / 180);
+                        //實際加工輪廓
+                        actual_first_X = (x2 - R1_X - P1_X) * 2;
+                        actual_first_Z = z2 - R1_Z + P1_Z;
+                        actual_finish_X = (x2 + R2_X - P2_X) * 2;
+                        actual_finish_Z = z2 + R2_Z + P2_Z;
+
+                        center_XZ = Math.sqrt(r ** 2 + RR ** 2);
+                        center_angles = (Math.abs(AB_angles) + Math.abs(R_angles))
+                        //中點座標~圓心座標
+                        center_X_X = center_XZ * Math.sin((center_angles) * Math.PI / 180)
+                        center_Z_Z = center_XZ * Math.cos((center_angles) * Math.PI / 180)
+
+
+                        let selectedDirection = document.getElementById('direction').value;
+                        if (selectedDirection === 'G03') {
+                            //刀具路徑圓心
+
+                            center_X = (x2 - radius) - center_X_X;
+                            center_Z = (z2 - radius) - center_Z_Z;
+                            //實際加工輪廓圓心
+                            actual_center_X = (x2) - center_X_X;
+                            actual_center_Z = z2 - center_Z_Z;
+                        }else if (selectedDirection === 'G02') {
+                            //刀具路徑圓心
+                            center_X = (x2 - radius) - center_X_X;
+                            center_Z = (z2 - radius) + center_Z_Z;
+                            //實際加工輪廓圓心
+                            actual_center_X = (x2) - center_X_X;
+                            actual_center_Z = z2 + center_Z_Z;
+                        }      
+
+
+
+
+
+
                     } else if (selectedMachine === 'T' && selectedDirection === 'right') {
                         R_first_X = (x2 + R1_X + P1_X + radius) * 2;
                         R_first_Z = z2 - R1_Z + P1_Z - radius;
                         R_finish_X = (x2 - R2_X + P2_X + radius) * 2;
                         R_finish_Z = z2 + R2_Z + P2_Z - radius;
                         const center_XZ = Math.sqrt(r ** 2 + RR ** 2);
-                        center_X = x2 - center_XZ * Math.sin((AB_angles + R_angles) * Math.PI / 180);
-                        center_Z = z2 - center_XZ * Math.cos((AB_angles + R_angles) * Math.PI / 180);
+                        let selectedDirection = document.getElementById('direction').value;
+                        if (selectedDirection === 'G03') {
+                            center_X = x2 + center_X_X;
+                            center_Z = z2 + center_Z_Z;
+                        }else if (selectedDirection === 'G02') {
+                            center_X = x2 + center_X_X;
+                            center_Z = z2 - center_Z_Z;
+                        }                            
                     } else if (selectedMachine === 'L' && selectedDirection === 'up') {
                         R_first_X = (x2 + R1_X + P1_X + radius) * 2;
                         R_first_Z = z2 - R1_Z + P1_Z - radius;
                         R_finish_X = (x2 - R2_X + P2_X + radius) * 2;
                         R_finish_Z = z2 + R2_Z + P2_Z - radius;
                         const center_XZ = Math.sqrt(r ** 2 + RR ** 2);
-                        center_X = x2 - center_XZ * Math.sin((AB_angles + R_angles) * Math.PI / 180);
-                        center_Z = z2 - center_XZ * Math.cos((AB_angles + R_angles) * Math.PI / 180);
+                        center_X = x2 - center_X_X;
+                        center_Z = z2 - center_Z_Z;
                     } else if (selectedMachine === 'L' && selectedDirection === 'down') {
                         R_first_X = (x2 + R1_X - P1_X - radius) * 2;
                         R_first_Z = z2 - R1_Z + P1_Z - radius;
                         R_finish_X = (x2 - R2_X - P2_X - radius) * 2;
                         R_finish_Z = z2 + R2_Z - P2_Z - radius;
                         const center_XZ = Math.sqrt(r ** 2 + RR ** 2);
-                        center_X = x2 - center_XZ * Math.sin((AB_angles + R_angles) * Math.PI / 180);
-                        center_Z = z2 - center_XZ * Math.cos((AB_angles + R_angles) * Math.PI / 180);
+                        center_X = x2 - center_X_X;
+                        center_Z = z2 - center_Z_Z;
                     } else {
                         document.getElementById('test').textContent = '未知的條件';
                         return;
@@ -365,11 +454,19 @@
                     const startAngle = Math.atan2(R_first_Z - center_Z, (R_first_X / 2) - center_X);
                     const endAngle = Math.atan2(R_finish_Z - center_Z, (R_finish_X / 2) - center_X);
 
+
+                    const actual_startAngle = Math.atan2(actual_first_Z - actual_center_Z, (actual_first_X / 2) - actual_center_X);
+                    const actual_endAngle = Math.atan2(actual_finish_Z - actual_center_Z, (actual_finish_X / 2) - actual_center_X);
+
                     // 使用 r 來繪製圓弧
                     const arcPoints = [];
+                    const actualPoints = [];
                     const numPoints = 100; // 點的數量
 
                     const angleStep = (endAngle - startAngle) / numPoints;
+                    const actual_angleStep = (actual_endAngle - actual_startAngle) / numPoints;
+
+
 
                     for (let i = 0; i <= numPoints; i++) {
                         const angle = startAngle + i * angleStep;
@@ -378,16 +475,29 @@
                         arcPoints.push({ x: arcX, y: arcZ });
                     }
 
+                    for (let i = 0; i <= numPoints; i++) {
+                        const angle = actual_startAngle + i * actual_angleStep;
+                        const arcX = actual_center_X + (r + reserved) * Math.cos(angle);
+                        const arcZ = actual_center_Z + (r + reserved) * Math.sin(angle);
+                        actualPoints.push({ x: arcX, y: arcZ });
+                    }
+
+
+
+
+
+
+
                     // Update chart
-                    updateChart(inputPoints, arcPoints);
+                    updateChart(inputPoints, arcPoints , actualPoints);
 
                     // Display the result
                     document.getElementById('test').innerHTML = `
                         結果：<br>
                         R角起點: ${R_first_X.toFixed(2)}, ${R_first_Z.toFixed(2)}<br>
                         R角終點: ${R_finish_X.toFixed(2)}, ${R_finish_Z.toFixed(2)}<br>
-                        RR: ${RR.toFixed(2)}<br>
-                        R角中心: ${center_X.toFixed(2)}, ${center_Z.toFixed(2)}
+                        刀具R角中心: ${center_X.toFixed(2)}, ${center_Z.toFixed(2)}
+                        刀具R角中心: ${actual_center_X.toFixed(2)}, ${actual_center_Z.toFixed(2)}
                     `;
                 } else {
                     document.getElementById('test').textContent = '請選擇機台和方向';
