@@ -263,60 +263,66 @@
                 type: 'scatter',
                 data: {
                     datasets: [
-                    {
-                        label: '圖面',
-                        data: [], // 用於儲存輸入的座標點
-                        backgroundColor: 'rgba(54, 162, 235, 0.8)', // 點的顏色
-                        borderColor: 'rgba(54, 162, 235, 1)', // 線的顏色
-                        borderWidth: 2, // 線的粗細
-                        fill: false, // 不填充點之間的區域
-                        lineTension: 0, // 使線條不會有彎曲
-                        showLine: true, // 顯示線
-                    },
-                    {
-                        label: '刀具路徑',
-                        data: [], // 用於儲存計算結果的座標點
-                        backgroundColor: 'rgba(255, 99, 132, 0.8)', // 點的顏色
-                        borderColor: 'rgba(255, 99, 132, 1)', // 線的顏色
-                        borderWidth: 2, // 線的粗細
-                        fill: false, // 不填充點之間的區域
-                        lineTension: 0, // 使線條不會有彎曲
-                        showLine: true, // 顯示線
-                    },
-
-                    {
-                        label: '加工輪廓',
-                        data: [], // 用於儲存計算結果的座標點
-                        backgroundColor: 'rgba(75, 192, 192, 0.8)', // 點的顏色 (改為綠色)
-                        borderColor: 'rgba(75, 192, 192, 1)', // 線的顏色 (改為綠色)
-                        borderWidth: 2, // 線的粗細
-                        fill: false, // 不填充點之間的區域
-                        lineTension: 0, // 使線條不會有彎曲
-                        showLine: true, // 顯示線
-                    },
-
-
+                        {
+                            label: '圖面',
+                            data: [], // 用於儲存輸入的座標點
+                            backgroundColor: 'rgba(54, 162, 235, 0.8)', // 點的顏色
+                            borderColor: 'rgba(54, 162, 235, 1)', // 線的顏色
+                            borderWidth: 2, // 線的粗細
+                            fill: false, // 不填充點之間的區域
+                            lineTension: 0, // 使線條不會有彎曲
+                            showLine: true, // 顯示線
+                        },
+                        {
+                            label: '刀具路徑',
+                            data: [], // 用於儲存計算結果的座標點
+                            backgroundColor: 'rgba(255, 99, 132, 0.8)', // 點的顏色
+                            borderColor: 'rgba(255, 99, 132, 1)', // 線的顏色
+                            borderWidth: 2, // 線的粗細
+                            fill: false, // 不填充點之間的區域
+                            lineTension: 0, // 使線條不會有彎曲
+                            showLine: true, // 顯示線
+                        },
+                        {
+                            label: '加工輪廓',
+                            data: [], // 用於儲存計算結果的座標點
+                            backgroundColor: 'rgba(75, 192, 192, 0.8)', // 點的顏色 (改為綠色)
+                            borderColor: 'rgba(75, 192, 192, 1)', // 線的顏色 (改為綠色)
+                            borderWidth: 2, // 線的粗細
+                            fill: false, // 不填充點之間的區域
+                            lineTension: 0, // 使線條不會有彎曲
+                            showLine: true, // 顯示線
+                        },
                     ],
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false, // 禁用默認比例
+                    aspectRatio: 1, // 設置比例為 1:1
                     scales: {
                         x: {
                             title: {
                                 display: true,
-                                text: 'Z 座標',
+                                text: selectedMachine === 'T' ? 'Z 座標' : 'X 座標', // 根據 selectedMachine 設置顯示的文字
+                            },
+                            ticks: {
+                                stepSize: 1, // 每隔 1 的刻度
                             },
                         },
                         y: {
                             title: {
                                 display: true,
-                                text: 'X 座標',
+                                text: selectedMachine === 'T' ? 'X 座標' : 'Z 座標', // 根據 selectedMachine 設置顯示的文字
+                            },
+                            ticks: {
+                                stepSize: 1, // 每隔 1 的刻度
                             },
                         },
                     },
                 },
             });
         }
+
 
         function updateChart(inputPoints, arcPoints , actualPoints) {
             chart.data.datasets[0].data = inputPoints; // 更新輸入座標
@@ -338,16 +344,27 @@
             const radius = parseFloat(document.getElementById('radius').value);
 
             if (!isNaN(x1) && !isNaN(z1) && !isNaN(x2) && !isNaN(z2) && !isNaN(x3) && !isNaN(z3)) {
-                const inputPoints = [
-                    { x: x1, y: z1 },
-                    { x: x2, y: z2 },
-                    { x: x3, y: z3 },
-                ];
+                let inputPoints; // 這裡定義變量
 
+                if (selectedMachine === 'T') {
+                    inputPoints = [  // 使用 = 來賦值
+                        { x: x1, y: z1 },
+                        { x: x2, y: z2 },
+                        { x: x3, y: z3 },
+                    ];
+                }
+                else if (selectedMachine === 'L') {
+                    inputPoints = [  // 使用 = 來賦值
+                        { x: z1, y: x1 },
+                        { x: z2, y: x2 },
+                        { x: z3, y: x3 },
+                    ];
+                }
+            
                 if (selectedMachine && selectedDirection) {
                     const AB = Math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2);
                     const BC = Math.sqrt((x3 - x2) ** 2 + (z3 - z2) ** 2);
-
+                    
                     const AB_rad = Math.asin((z2 - z1) / AB);
                     const AB_angles = AB_rad * (180 / Math.PI);
 
@@ -395,7 +412,6 @@
                         let selectedDirection = document.getElementById('direction').value;
                         if (selectedDirection === 'G03') {
                             //刀具路徑圓心
-
                             center_X = (x2 - radius) - center_X_X;
                             center_Z = (z2 - radius) - center_Z_Z;
                             //實際加工輪廓圓心
@@ -410,41 +426,115 @@
                             actual_center_Z = z2 + center_Z_Z;
                         }      
 
-
-
-
-
-
                     } else if (selectedMachine === 'T' && selectedDirection === 'right') {
+                        //刀具路徑
                         R_first_X = (x2 + R1_X + P1_X + radius) * 2;
                         R_first_Z = z2 - R1_Z + P1_Z - radius;
                         R_finish_X = (x2 - R2_X + P2_X + radius) * 2;
                         R_finish_Z = z2 + R2_Z + P2_Z - radius;
-                        const center_XZ = Math.sqrt(r ** 2 + RR ** 2);
+                        //實際加工輪廓
+                        actual_first_X = (x2 + R1_X + P1_X) * 2;
+                        actual_first_Z = z2 - R1_Z + P1_Z;
+                        actual_finish_X = (x2 - R2_X + P2_X) * 2;
+                        actual_finish_Z = z2 + R2_Z + P2_Z;
+                        center_XZ = Math.sqrt(r ** 2 + RR ** 2);
+                        center_angles = (Math.abs(AB_angles) + Math.abs(R_angles))
+                        //中點座標~圓心座標
+                        center_X_X = center_XZ * Math.sin((center_angles) * Math.PI / 180)
+                        center_Z_Z = center_XZ * Math.cos((center_angles) * Math.PI / 180)
+
                         let selectedDirection = document.getElementById('direction').value;
                         if (selectedDirection === 'G03') {
-                            center_X = x2 + center_X_X;
-                            center_Z = z2 + center_Z_Z;
+                            //刀具路徑圓心
+                            center_X = (x2 + radius) - center_X_X;
+                            center_Z = (z2 - radius) - center_Z_Z;
+                            //實際加工輪廓圓心
+                            actual_center_X = (x2) - center_X_X;
+                            actual_center_Z = z2 - center_Z_Z;
                         }else if (selectedDirection === 'G02') {
-                            center_X = x2 + center_X_X;
-                            center_Z = z2 - center_Z_Z;
-                        }                            
+                            //刀具路徑圓心
+                            center_X = (x2 + radius) + center_X_X;
+                            center_Z = (z2 - radius) - center_Z_Z;
+                            //實際加工輪廓圓心
+                            actual_center_X = (x2) + center_X_X;
+                            actual_center_Z = z2 - center_Z_Z;
+                        }      
+                        
                     } else if (selectedMachine === 'L' && selectedDirection === 'up') {
+                        //刀具路徑
                         R_first_X = (x2 + R1_X + P1_X + radius) * 2;
                         R_first_Z = z2 - R1_Z + P1_Z - radius;
                         R_finish_X = (x2 - R2_X + P2_X + radius) * 2;
                         R_finish_Z = z2 + R2_Z + P2_Z - radius;
-                        const center_XZ = Math.sqrt(r ** 2 + RR ** 2);
-                        center_X = x2 - center_X_X;
-                        center_Z = z2 - center_Z_Z;
+                        //實際加工輪廓
+                        actual_first_X = (x2 + R1_X + P1_X) * 2;
+                        actual_first_Z = z2 - R1_Z + P1_Z;
+                        actual_finish_X = (x2 - R2_X + P2_X) * 2;
+                        actual_finish_Z = z2 + R2_Z + P2_Z;
+
+                        center_XZ = Math.sqrt(r ** 2 + RR ** 2);
+                        center_angles = (90-(Math.abs(AB_angles)) + Math.abs(R_angles))
+                        //中點座標~圓心座標
+                        center_X_X = center_XZ * Math.cos((center_angles) * Math.PI / 180)
+                        center_Z_Z = center_XZ * Math.sin((center_angles) * Math.PI / 180)
+
+                        let selectedDirection = document.getElementById('direction').value;
+                        if (selectedDirection === 'G03') {
+                            //刀具路徑圓心
+                            center_X = (x2 + radius) + center_X_X;
+                            center_Z = (z2 - radius) - center_Z_Z;
+                            //實際加工輪廓圓心
+                            actual_center_X = (x2) + center_X_X;
+                            actual_center_Z = z2 - center_Z_Z;
+                        }else if (selectedDirection === 'G02') {
+                            //刀具路徑圓心
+                            center_X = (x2 + radius) -  center_X_X;
+                            center_Z = (z2 - radius) - center_Z_Z;
+                            //實際加工輪廓圓心
+                            actual_center_X = (x2) - center_X_X;
+                            actual_center_Z = z2 - center_Z_Z;
+                        }      
+
+
+
+
+
+
+
                     } else if (selectedMachine === 'L' && selectedDirection === 'down') {
-                        R_first_X = (x2 + R1_X - P1_X - radius) * 2;
+                        //刀具路徑
+                        R_first_X = (x2 - R1_X - P1_X - radius) * 2;
                         R_first_Z = z2 - R1_Z + P1_Z - radius;
-                        R_finish_X = (x2 - R2_X - P2_X - radius) * 2;
-                        R_finish_Z = z2 + R2_Z - P2_Z - radius;
-                        const center_XZ = Math.sqrt(r ** 2 + RR ** 2);
-                        center_X = x2 - center_X_X;
-                        center_Z = z2 - center_Z_Z;
+                        R_finish_X = (x2 + R2_X + P2_X - radius) * 2;
+                        R_finish_Z = z2 + R2_Z + P2_Z - radius;
+                        //實際加工輪廓
+                        actual_first_X = (x2 - R1_X - P1_X) * 2;
+                        actual_first_Z = z2 - R1_Z + P1_Z;
+                        actual_finish_X = (x2 + R2_X + P2_X) * 2;
+                        actual_finish_Z = z2 + R2_Z + P2_Z;
+
+                        center_XZ = Math.sqrt(r ** 2 + RR ** 2);
+                        center_angles = (90-(Math.abs(AB_angles)) + Math.abs(R_angles))
+                        //中點座標~圓心座標
+                        center_X_X = center_XZ * Math.cos((center_angles) * Math.PI / 180)
+                        center_Z_Z = center_XZ * Math.sin((center_angles) * Math.PI / 180)
+
+                        let selectedDirection = document.getElementById('direction').value;
+                        if (selectedDirection === 'G03') {
+                            //刀具路徑圓心
+                            center_X = (x2 - radius) + center_X_X;
+                            center_Z = (z2 - radius) - center_Z_Z;
+                            //實際加工輪廓圓心
+                            actual_center_X = (x2) + center_X_X;
+                            actual_center_Z = z2 - center_Z_Z;
+                        }else if (selectedDirection === 'G02') {
+                            //刀具路徑圓心
+                            center_X = (x2 - radius) +  center_X_X;
+                            center_Z = (z2 - radius) + center_Z_Z;
+                            //實際加工輪廓圓心
+                            actual_center_X = (x2) + center_X_X;
+                            actual_center_Z = z2 + center_Z_Z;
+                        }      
                     } else {
                         document.getElementById('test').textContent = '未知的條件';
                         return;
@@ -466,20 +556,28 @@
                     const angleStep = (endAngle - startAngle) / numPoints;
                     const actual_angleStep = (actual_endAngle - actual_startAngle) / numPoints;
 
-
-
                     for (let i = 0; i <= numPoints; i++) {
                         const angle = startAngle + i * angleStep;
                         const arcX = center_X + (r + reserved) * Math.cos(angle);
                         const arcZ = center_Z + (r + reserved) * Math.sin(angle);
-                        arcPoints.push({ x: arcX, y: arcZ });
+                        if (selectedMachine === 'T') {
+                            arcPoints.push({ x: arcX, y: arcZ });
+                        }
+                        else if (selectedMachine === 'L') {
+                            arcPoints.push({ x: arcZ, y: arcX });
+                        }
                     }
 
                     for (let i = 0; i <= numPoints; i++) {
                         const angle = actual_startAngle + i * actual_angleStep;
                         const arcX = actual_center_X + (r + reserved) * Math.cos(angle);
                         const arcZ = actual_center_Z + (r + reserved) * Math.sin(angle);
-                        actualPoints.push({ x: arcX, y: arcZ });
+                        if (selectedMachine === 'T') {
+                            actualPoints.push({ x: arcX, y: arcZ });
+                        }
+                        else if (selectedMachine === 'L') {
+                            actualPoints.push({ x: arcZ, y: arcX });
+                        }
                     }
 
 
@@ -494,9 +592,16 @@
                     // Display the result
                     document.getElementById('test').innerHTML = `
                         結果：<br>
+                        center_XZ: ${center_XZ.toFixed(2)}<br>
+                        center_angles: ${center_angles.toFixed(2)}<br>
+                        center_X_X: ${center_X_X.toFixed(2)}<br>
+                        center_Z_Z: ${center_Z_Z.toFixed(2)}<br>
+                        R角: ${R_angles.toFixed(2)}<br>
+                        AB角: ${AB_angles.toFixed(2)}<br>
+
                         R角起點: ${R_first_X.toFixed(2)}, ${R_first_Z.toFixed(2)}<br>
                         R角終點: ${R_finish_X.toFixed(2)}, ${R_finish_Z.toFixed(2)}<br>
-                        刀具R角中心: ${center_X.toFixed(2)}, ${center_Z.toFixed(2)}
+                        刀具R角中心: ${center_X.toFixed(2)}, ${center_Z.toFixed(2)}<br>
                         刀具R角中心: ${actual_center_X.toFixed(2)}, ${actual_center_Z.toFixed(2)}
                     `;
                 } else {
