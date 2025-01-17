@@ -1,0 +1,125 @@
+body {
+    font-family: 'Roboto', Arial, sans-serif;
+    background: linear-gradient(to bottom, #f4f4f9, #dcdce0);
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 1200px;
+    width: 100%;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.5s ease-in-out;
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* 按鈕區塊 */
+.button-row {
+    margin: 10px 0;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+button {
+    padding: 12px;
+    width: 100px;
+    background-color: #007bff;
+    border: 1px solid #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+button.active {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+/* 表單區塊 */
+.form-group {
+    display: flex;
+    gap: 15px;
+    margin: 10px 0;
+    justify-content: center;
+    align-items: center;
+}
+
+.form-group label {
+    font-size: 16px;
+    color: #333;
+}
+
+.form-group input {
+    padding: 10px;
+    width: 120px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    margin-right: 5px;
+}
+
+.form-group input:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+/* 選擇框樣式 */
+.form-group select {
+    padding: 10px;
+    width: 120px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    background-color: white;
+    color: #333;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    transition: border-color 0.3s ease;
+}
+
+.form-group select:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+/* 結果顯示區塊 */
+#result {
+    margin-top: 20px;
+    font-size: 1.2em;
+    color: #555;
+    font-weight: bold;
+}
+
+/* 標題區塊 */
+.section-title {
+    font-size: 18px;
+    color: #333;
+    margin-top: 20px;
+}
+
+/* 畫布區塊 */
+canvas {
+    width: 100%;
+    height: 100%;
+}
+
+@media (max-width: 600px) {
+    canvas {
+        width: 100%;
+        height: 600%;
+    }
+}
