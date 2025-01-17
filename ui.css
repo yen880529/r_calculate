@@ -1,9 +1,13 @@
+/* 全局重置，確保所有元素的 box-sizing 一致 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     font-family: 'Roboto', Arial, sans-serif;
     background: linear-gradient(to bottom, #f4f4f9, #dcdce0);
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -36,11 +40,12 @@ button {
     cursor: pointer;
     border-radius: 5px;
     font-size: 16px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 button:hover {
     background-color: #0056b3;
+    border-color: #0056b3;
 }
 
 button.active {
@@ -62,33 +67,34 @@ button.active {
     color: #333;
 }
 
-.form-group input {
-    padding: 10px;
-    width: 120px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    font-size: 16px;
-    margin-right: 5px;
-}
-
 .form-group input:focus {
     border-color: #007bff;
     outline: none;
 }
 
-/* 選擇框樣式 */
+/* 統一 input 和 select 樣式 */
+.form-group input,
 .form-group select {
+    width: 140px;
+    height: 40px;
     padding: 10px;
-    width: 120px;
     border-radius: 5px;
     border: 1px solid #ccc;
     font-size: 16px;
     background-color: white;
     color: #333;
+}
+
+/* 針對 select 進一步調整，移除預設樣式 */
+.form-group select {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    transition: border-color 0.3s ease;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='black'><path d='M5 7l5 5 5-5H5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+    padding-right: 35px;
 }
 
 .form-group select:focus {
@@ -120,6 +126,6 @@ canvas {
 @media (max-width: 600px) {
     canvas {
         width: 100%;
-        height: 600%;
+        height: 600px;
     }
 }
